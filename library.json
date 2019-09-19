@@ -1,0 +1,18 @@
+{
+    "name": "ULPAPA",
+    "description": "An APA LED driver for ESP32s, using the ULP coprocessor. Control directly or integrate the driver into FastLED.",
+    "authors": [
+        {
+            "name": "Matt Borchers",
+            "url": "https://github.com/boarchuz",
+            "maintainer": true
+        }
+    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/boarchuz/ULPAPA.git"
+    },
+    "version": "0.0.1",
+    "frameworks": "arduino",
+    "platforms": "espressif32"
+}
