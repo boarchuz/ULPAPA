@@ -1,6 +1,9 @@
 #include "ULPAPADriver.h"
 
 #include "sdkconfig.h"
+#if !(defined CONFIG_ESP32_ULP_COPROC_RESERVE_MEM) && defined(CONFIG_ULP_COPROC_RESERVE_MEM)
+		#define CONFIG_ESP32_ULP_COPROC_RESERVE_MEM CONFIG_ULP_COPROC_RESERVE_MEM
+#endif
 #include "esp32/ulp.h"
 #include "driver/gpio.h"
 #include "driver/rtc_io.h"
@@ -26,10 +29,6 @@
 	#define I_STAGE_RST() { .halt = {\
 		.unused = (SUB_OPCODE_ALU_CNT << 25) | (ALU_SEL_SRST << 21), \
 		.opcode = OPCODE_ALU } }
-#endif
-
-#if !(defined CONFIG_ESP32_ULP_COPROC_RESERVE_MEM) && defined(CONFIG_ULP_COPROC_RESERVE_MEM)
-		#define CONFIG_ESP32_ULP_COPROC_RESERVE_MEM CONFIG_ULP_COPROC_RESERVE_MEM
 #endif
 
 ULPAPADriver::ULPAPADriver(ulp_apa_led_t *leds, uint16_t num)
@@ -105,9 +104,9 @@ void ULPAPADriver::begin(uint8_t data, uint8_t clock)
 
 		//Transmit 32-bit start frame (0 * 32)
 		I_STAGE_RST(),
-        I_WR_REG_BIT(RTC_GPIO_OUT_W1TS_REG, RTC_GPIO_OUT_DATA_W1TS_S + (rtc_gpio_desc[pin_clock].rtc_num), 1),
+        I_WR_REG_BIT(RTC_GPIO_OUT_W1TS_REG, (uint8_t)(RTC_GPIO_OUT_DATA_W1TS_S + (rtc_gpio_desc[pin_clock].rtc_num)), 1),
 		I_STAGE_INC(1),
-		I_WR_REG_BIT(RTC_GPIO_OUT_W1TC_REG, RTC_GPIO_OUT_DATA_W1TC_S + (rtc_gpio_desc[pin_clock].rtc_num), 1),
+		I_WR_REG_BIT(RTC_GPIO_OUT_W1TC_REG, (uint8_t)(RTC_GPIO_OUT_DATA_W1TC_S + (rtc_gpio_desc[pin_clock].rtc_num)), 1),
 		I_JUMPS(-3,32,JUMPS_LT),
 
 		//Now loop through all the APAs
@@ -117,22 +116,22 @@ void ULPAPADriver::begin(uint8_t data, uint8_t clock)
 		I_LD(R0,R1,0),
 
 		//3 bits 111
-		I_WR_REG_BIT(RTC_GPIO_OUT_W1TS_REG, RTC_GPIO_OUT_DATA_W1TS_S + (rtc_gpio_desc[pin_data].rtc_num), 1),
-		I_WR_REG_BIT(RTC_GPIO_OUT_W1TS_REG, RTC_GPIO_OUT_DATA_W1TS_S + (rtc_gpio_desc[pin_clock].rtc_num), 1),
+		I_WR_REG_BIT(RTC_GPIO_OUT_W1TS_REG, (uint8_t)(RTC_GPIO_OUT_DATA_W1TS_S + (rtc_gpio_desc[pin_data].rtc_num)), 1),
+		I_WR_REG_BIT(RTC_GPIO_OUT_W1TS_REG, (uint8_t)(RTC_GPIO_OUT_DATA_W1TS_S + (rtc_gpio_desc[pin_clock].rtc_num)), 1),
 		I_STAGE_INC(1),
 		I_LSHI(R0, R0, 1),
-		I_WR_REG_BIT(RTC_GPIO_OUT_W1TC_REG, RTC_GPIO_OUT_DATA_W1TC_S + (rtc_gpio_desc[pin_clock].rtc_num), 1),
+		I_WR_REG_BIT(RTC_GPIO_OUT_W1TC_REG, (uint8_t)(RTC_GPIO_OUT_DATA_W1TC_S + (rtc_gpio_desc[pin_clock].rtc_num)), 1),
 		I_JUMPS(-4,3,JUMPS_LT),
 
 		//5 bits brightness, 8 bits blue
 		I_BL(3, 32768),
-        I_WR_REG_BIT(RTC_GPIO_OUT_W1TS_REG, RTC_GPIO_OUT_DATA_W1TS_S + (rtc_gpio_desc[pin_data].rtc_num), 1),
+        I_WR_REG_BIT(RTC_GPIO_OUT_W1TS_REG, (uint8_t)(RTC_GPIO_OUT_DATA_W1TS_S + (rtc_gpio_desc[pin_data].rtc_num)), 1),
         I_BGE(2,0),
-		I_WR_REG_BIT(RTC_GPIO_OUT_W1TC_REG, RTC_GPIO_OUT_DATA_W1TC_S + (rtc_gpio_desc[pin_data].rtc_num), 1),
-		I_WR_REG_BIT(RTC_GPIO_OUT_W1TS_REG, RTC_GPIO_OUT_DATA_W1TS_S + (rtc_gpio_desc[pin_clock].rtc_num), 1),
+		I_WR_REG_BIT(RTC_GPIO_OUT_W1TC_REG, (uint8_t)(RTC_GPIO_OUT_DATA_W1TC_S + (rtc_gpio_desc[pin_data].rtc_num)), 1),
+		I_WR_REG_BIT(RTC_GPIO_OUT_W1TS_REG, (uint8_t)(RTC_GPIO_OUT_DATA_W1TS_S + (rtc_gpio_desc[pin_clock].rtc_num)), 1),
         I_STAGE_INC(1),
         I_LSHI(R0, R0, 1),
-        I_WR_REG_BIT(RTC_GPIO_OUT_W1TC_REG, RTC_GPIO_OUT_DATA_W1TC_S + (rtc_gpio_desc[pin_clock].rtc_num), 1),
+        I_WR_REG_BIT(RTC_GPIO_OUT_W1TC_REG, (uint8_t)(RTC_GPIO_OUT_DATA_W1TC_S + (rtc_gpio_desc[pin_clock].rtc_num)), 1),
 		I_JUMPS(-8,16,JUMPS_LT),
 
 		//Increment pointer
@@ -143,13 +142,13 @@ void ULPAPADriver::begin(uint8_t data, uint8_t clock)
 
 		//8 bits green, 8 bits red
 		I_BL(3, 32768),
-        I_WR_REG_BIT(RTC_GPIO_OUT_W1TS_REG, RTC_GPIO_OUT_DATA_W1TS_S + (rtc_gpio_desc[pin_data].rtc_num), 1),
+        I_WR_REG_BIT(RTC_GPIO_OUT_W1TS_REG, (uint8_t)(RTC_GPIO_OUT_DATA_W1TS_S + (rtc_gpio_desc[pin_data].rtc_num)), 1),
         I_BGE(2,0),
-		I_WR_REG_BIT(RTC_GPIO_OUT_W1TC_REG, RTC_GPIO_OUT_DATA_W1TC_S + (rtc_gpio_desc[pin_data].rtc_num), 1),
-		I_WR_REG_BIT(RTC_GPIO_OUT_W1TS_REG, RTC_GPIO_OUT_DATA_W1TS_S + (rtc_gpio_desc[pin_clock].rtc_num), 1),
+		I_WR_REG_BIT(RTC_GPIO_OUT_W1TC_REG, (uint8_t)(RTC_GPIO_OUT_DATA_W1TC_S + (rtc_gpio_desc[pin_data].rtc_num)), 1),
+		I_WR_REG_BIT(RTC_GPIO_OUT_W1TS_REG, (uint8_t)(RTC_GPIO_OUT_DATA_W1TS_S + (rtc_gpio_desc[pin_clock].rtc_num)), 1),
         I_STAGE_INC(1),
         I_LSHI(R0, R0, 1),
-        I_WR_REG_BIT(RTC_GPIO_OUT_W1TC_REG, RTC_GPIO_OUT_DATA_W1TC_S + (rtc_gpio_desc[pin_clock].rtc_num), 1),
+        I_WR_REG_BIT(RTC_GPIO_OUT_W1TC_REG, (uint8_t)(RTC_GPIO_OUT_DATA_W1TC_S + (rtc_gpio_desc[pin_clock].rtc_num)), 1),
 		I_JUMPS(-8,32,JUMPS_LT),
 
 		//Increment pointer
@@ -161,12 +160,12 @@ void ULPAPADriver::begin(uint8_t data, uint8_t clock)
 
 		//Transmit 32-bit end frame (1 * 32)
 		I_STAGE_RST(),
-		I_WR_REG_BIT(RTC_GPIO_OUT_W1TS_REG, RTC_GPIO_OUT_DATA_W1TS_S + (rtc_gpio_desc[pin_data].rtc_num), 1),
-        I_WR_REG_BIT(RTC_GPIO_OUT_W1TS_REG, RTC_GPIO_OUT_DATA_W1TS_S + (rtc_gpio_desc[pin_clock].rtc_num), 1),
+		I_WR_REG_BIT(RTC_GPIO_OUT_W1TS_REG, (uint8_t)(RTC_GPIO_OUT_DATA_W1TS_S + (rtc_gpio_desc[pin_data].rtc_num)), 1),
+        I_WR_REG_BIT(RTC_GPIO_OUT_W1TS_REG, (uint8_t)(RTC_GPIO_OUT_DATA_W1TS_S + (rtc_gpio_desc[pin_clock].rtc_num)), 1),
 		I_STAGE_INC(1),
-		I_WR_REG_BIT(RTC_GPIO_OUT_W1TC_REG, RTC_GPIO_OUT_DATA_W1TC_S + (rtc_gpio_desc[pin_clock].rtc_num), 1),
+		I_WR_REG_BIT(RTC_GPIO_OUT_W1TC_REG, (uint8_t)(RTC_GPIO_OUT_DATA_W1TC_S + (rtc_gpio_desc[pin_clock].rtc_num)), 1),
 		I_JUMPS(-3,32,JUMPS_LT),
-		I_WR_REG_BIT(RTC_GPIO_OUT_W1TC_REG, RTC_GPIO_OUT_DATA_W1TC_S + (rtc_gpio_desc[pin_data].rtc_num), 1),
+		I_WR_REG_BIT(RTC_GPIO_OUT_W1TC_REG, (uint8_t)(RTC_GPIO_OUT_DATA_W1TC_S + (rtc_gpio_desc[pin_data].rtc_num)), 1),
 
 		//Loop
 		I_BXI(0),
