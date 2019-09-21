@@ -1,4 +1,5 @@
 #ifndef ULPAPAFastLED_h
+#define ULPAPAFastLED_h
 
 #include "ULPAPADriver.h"
 #include "FastLED.h"
